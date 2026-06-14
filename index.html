@@ -263,19 +263,19 @@
             }
 
             if (Hls.isSupported()) {
-                // ⚡ ULTRA LOW-LATENCY BUFFERLESS CONFIGURATION
+                // 🛠️ SMART AUTO-HEALING ADJUSTED CONFIGURATION
                 hlsEngineInstance = new Hls({
                     enableWorker: true,
-                    lowLatencyMode: true,          // লো-ল্যাটেন্সি মোড অন
-                    backBufferLength: 5,           // পেছনের ক্যাশ ডিলিট করে র্যাম ফ্রি রাখবে
-                    maxBufferLength: 4,            // সামনে সর্বোচ্চ ৪ সেকেন্ড বাফার করবে (ল্যাগ প্রিভেন্ট করার বেস্ট ভ্যালু)
-                    maxMaxBufferLength: 5,
-                    liveSyncDuration: 1.5,         // লাইভ ব্রডকাস্টের ১.৫ সেকেন্ডের ভেতর সিঙ্ক করবে
-                    liveMaxLatencyDuration: 3,     // ল্যাটেন্সি সর্বোচ্চ ৩ সেকেন্ড অ্যালাউ করবে
-                    manifestLoadingMaxRetry: 10,   // নেট ড্রপ করলে রিকানেক্ট ট্রাই করবে
-                    manifestLoadingRetryDelay: 500,
-                    levelLoadingMaxRetry: 10,
-                    levelLoadingRetryDelay: 500
+                    lowLatencyMode: true,
+                    backBufferLength: 10,          // পেছনের বাফার কিছুটা ক্লিয়ার রাখবে
+                    maxBufferLength: 8,            // 🟢 ফিক্স: বাফার সাইজ ৪ থেকে বাড়িয়ে ৮ করা হলো, যাতে ছবি না ফাটে
+                    maxMaxBufferLength: 12,        
+                    liveSyncDurationCount: 3,      // সার্ভারের ৩টি সেগমেন্ট ব্যাকগ্রাউন্ডে জমা রাখবে স্ট্যাবিলিটির জন্য
+                    manifestLoadingMaxRetry: 15,   
+                    manifestLoadingRetryDelay: 1000,
+                    levelLoadingMaxRetry: 15,
+                    levelLoadingRetryDelay: 1000,
+                    abrEwmaDefaultEstimate: 5000000 // আপনার ফুল স্পিড নেটকে প্লেয়ার যেন শুরুতেই ডিটেক্ট করতে পারে
                 });
 
                 hlsEngineInstance.loadSource(streamUrl.trim());
@@ -290,16 +290,16 @@
                     }
                 });
 
-                // ওয়ান-ক্লিক অটো রিকভারি কোড (বাফারিং এড়াতে)
+                // 🔄 অটো-রিসেট লজিক: ফ্রেম ড্রপ বা ল্যাগ করলে প্লেয়ার নিজে থেকেই স্ট্রিম রিফ্রেশ করে সচল করবে
                 hlsEngineInstance.on(Hls.Events.ERROR, function(event, data) {
                     if (data.fatal) {
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                console.log("Network drop caught, recovering stream...");
+                                console.log("Network drop caught, recovering...");
                                 hlsEngineInstance.startLoad();
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
-                                console.log("Media stall caught, skipping broken frame...");
+                                console.log("Media stall caught, recovering media...");
                                 hlsEngineInstance.recoverMediaError();
                                 break;
                             default:
