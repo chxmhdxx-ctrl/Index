@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prince Sajjad Sports - Instant Play Live Node</title>
+    <title>Prince Sajjad - All-In-One Universal Stream Player</title>
     
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+    
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
@@ -64,6 +67,7 @@
             border-radius: 16px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
             border: 1px solid #334155;
+            box-sizing: border-box;
         }
 
         .player-wrapper {
@@ -74,32 +78,106 @@
             margin-bottom: 15px;
             border: 1px solid #475569;
             overflow: hidden;
-            aspect-ratio: 16 / 9;
+        }
+
+        .plyr {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
         }
 
         video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+            width: 100% !important;
+            height: auto !important;
             display: block;
+            object-fit: contain;
+        }
+
+        .link-paster-box {
+            background: #111827;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px dashed #4b5563;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .link-input {
+            flex: 1;
+            background: #1f2937;
+            border: 1px solid #374151;
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .link-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        .play-btn {
+            background: #f59e0b;
+            color: #0f172a;
+            border: none;
+            padding: 0 25px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .play-btn:hover {
+            background: #fbbf24;
+        }
+
+        .channel-section-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
         }
 
         .channel-list {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            margin-top: 20px;
+        }
+
+        .plyr--full-ui input[type=range] {
+            color: #38bdf8 !important;
+        }
+        .plyr__control--overlaid {
+            background: #38bdf8 !important;
+            color: #0f172a !important;
+        }
+        .plyr__menu__container [role=menuitemradio][aria-checked=true]::before {
+            background: #38bdf8 !important;
+        }
+
+        @media (max-width: 600px) {
+            .channel-list { grid-template-columns: 1fr; }
+            .link-paster-box { flex-direction: column; }
+            .play-btn { padding: 12px; }
+            h1 { font-size: 1.8rem; }
         }
 
         .channel-btn {
             background: #334155;
             color: #f8fafc;
             border: 2px solid transparent;
-            padding: 15px 10px;
+            padding: 14px 10px;
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             text-align: center;
             transition: all 0.2s ease;
         }
@@ -120,6 +198,8 @@
             font-size: 13px;
             color: #94a3b8;
             text-align: center;
+            max-width: 600px;
+            line-height: 1.5;
         }
     </style>
 </head>
@@ -129,29 +209,47 @@
         <div class="logo-box">
             <span class="logo-text-top">PRINCE</span>
             <span class="logo-text-mid">SAJJAD</span>
-            <span class="logo-icon">🏆</span>
-            <span class="logo-text-top" style="color:#38bdf8; font-size:10px;">SPORTS</span>
+            <span class="logo-icon">🌐</span>
+            <span class="logo-text-top" style="color:#38bdf8; font-size:10px;">STREAM</span>
         </div>
-        <h1>Prince Sajjad Sports</h1>
-        <p class="subtitle">Dual Broadcast Core HLS Player Network</p>
+        <h1>Universal Player</h1>
+        <p class="subtitle">All-In-One Live M3U8 Decoder Terminal</p>
     </div>
 
     <div class="container">
         <div class="player-wrapper">
-            <video id="hls-core-player" controls autoplay muted playsinline webkit-playsinline></video>
+            <video id="hls-core-player" controls autoplay muted playsinline></video>
         </div>
 
+        <div class="link-paster-box">
+            <input type="text" id="custom-url-input" class="link-input" placeholder="Paste your .m3u8 or live stream URL here...">
+            <button class="play-btn" onclick="playCustomLink()">Play Stream</button>
+        </div>
+
+        <div class="channel-section-title">Quick Presets / Channels</div>
         <div class="channel-list">
             <button class="channel-btn" onclick="loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8', this)">BEIN TV</button>
             <button class="channel-btn" onclick="loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/32/index.m3u8', this)">WIN SPORTS</button>
         </div>
     </div>
 
-    <p class="notice">🔊 <b>Instant Play:</b> Loaded. Video plays directly on startup. Tap the video screen volume icon to unmute the stream.</p>
+    <p class="notice">💡 <b>How to use:</b> Select any Quick Preset channel below, or paste a custom live M3U8 stream destination path into the input engine console bar above and tap "Play Stream".</p>
 
     <script>
         var videoElement = document.getElementById('hls-core-player');
         var hlsEngineInstance = null;
+        var plyrPlayer = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            plyrPlayer = new Plyr(videoElement, {
+                controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
+                tooltips: { controls: true, seek: false },
+                settings: ['quality', 'speed']
+            });
+
+            var primaryChannelButton = document.getElementsByClassName('channel-btn')[0];
+            loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8', primaryChannelButton);
+        });
 
         function loadHlsStream(streamUrl, buttonElement) {
             if (hlsEngineInstance) {
@@ -159,38 +257,49 @@
                 hlsEngineInstance = null;
             }
 
+            if (!streamUrl || streamUrl.trim() === "") {
+                alert("Please enter a valid live stream URL path.");
+                return;
+            }
+
             if (Hls.isSupported()) {
+                // ⚡ ULTRA LOW-LATENCY BUFFERLESS CONFIGURATION
                 hlsEngineInstance = new Hls({
                     enableWorker: true,
-                    lowLatencyMode: true,
-                    backBufferLength: 15,
-                    maxBufferLength: 6,
-                    liveSyncDurationCount: 1, // Tight latency to force feed immediate buffer packets
-                    manifestLoadingMaxRetry: 4
+                    lowLatencyMode: true,          // লো-ল্যাটেন্সি মোড অন
+                    backBufferLength: 5,           // পেছনের ক্যাশ ডিলিট করে র্যাম ফ্রি রাখবে
+                    maxBufferLength: 4,            // সামনে সর্বোচ্চ ৪ সেকেন্ড বাফার করবে (ল্যাগ প্রিভেন্ট করার বেস্ট ভ্যালু)
+                    maxMaxBufferLength: 5,
+                    liveSyncDuration: 1.5,         // লাইভ ব্রডকাস্টের ১.৫ সেকেন্ডের ভেতর সিঙ্ক করবে
+                    liveMaxLatencyDuration: 3,     // ল্যাটেন্সি সর্বোচ্চ ৩ সেকেন্ড অ্যালাউ করবে
+                    manifestLoadingMaxRetry: 10,   // নেট ড্রপ করলে রিকানেক্ট ট্রাই করবে
+                    manifestLoadingRetryDelay: 500,
+                    levelLoadingMaxRetry: 10,
+                    levelLoadingRetryDelay: 500
                 });
 
-                hlsEngineInstance.loadSource(streamUrl);
+                hlsEngineInstance.loadSource(streamUrl.trim());
                 hlsEngineInstance.attachMedia(videoElement);
                 
                 hlsEngineInstance.on(Hls.Events.MANIFEST_PARSED, function() {
-                    // Explicit programmatic execution promise to break browser passive lockups
-                    var playPromise = videoElement.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(function(error) {
-                            // If browser still resists, re-trigger soft boot loop
+                    if(plyrPlayer) {
+                        plyrPlayer.play().catch(function() {
                             videoElement.muted = true;
-                            videoElement.play();
+                            plyrPlayer.play();
                         });
                     }
                 });
 
+                // ওয়ান-ক্লিক অটো রিকভারি কোড (বাফারিং এড়াতে)
                 hlsEngineInstance.on(Hls.Events.ERROR, function(event, data) {
                     if (data.fatal) {
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.log("Network drop caught, recovering stream...");
                                 hlsEngineInstance.startLoad();
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.log("Media stall caught, skipping broken frame...");
                                 hlsEngineInstance.recoverMediaError();
                                 break;
                             default:
@@ -199,10 +308,11 @@
                     }
                 });
 
-            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-                videoElement.src = streamUrl;
+            } 
+            else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                videoElement.src = streamUrl.trim();
                 videoElement.addEventListener('loadedmetadata', function() {
-                    videoElement.play();
+                    if(plyrPlayer) plyrPlayer.play();
                 });
             }
 
@@ -213,11 +323,10 @@
             if (buttonElement) buttonElement.classList.add('active');
         }
 
-        // Dedicated pipeline event listener for instantaneous script routing execution
-        document.addEventListener('DOMContentLoaded', function() {
-            var primaryChannelButton = document.getElementsByClassName('channel-btn')[0];
-            loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8', primaryChannelButton);
-        });
+        function playCustomLink() {
+            var inputUrl = document.getElementById('custom-url-input').value.trim();
+            loadHlsStream(inputUrl, null);
+        }
     </script>
 </body>
 </html>
