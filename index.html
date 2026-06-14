@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prince Sajjad Sports - High-Performance Live Node</title>
+    <title>Prince Sajjad Sports - Dual-Node Live Terminal</title>
     
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
@@ -34,6 +34,178 @@
             border-radius: 50%;
             border: 4px solid #f59e0b;
             box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text-top { font-size: 11px; font-weight: 900; color: #f8fafc; letter-spacing: 1px; text-transform: uppercase; }
+        .logo-text-mid { font-size: 14px; font-weight: 900; color: #f59e0b; }
+        .logo-icon { font-size: 20px; }
+
+        h1 {
+            color: #38bdf8;
+            font-size: 2.4rem;
+            font-weight: 800;
+            margin: 0;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .subtitle { color: #94a3b8; margin: 5px 0 0 0; font-size: 14px; }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+            border: 1px solid #334155;
+        }
+
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            background: #000000;
+            margin-bottom: 15px;
+            border: 1px solid #475569;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* ২ চ্যানেলের জন্য গ্রিড লেআউট ফিক্স করা হয়েছে */
+        .channel-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .channel-list { grid-template-columns: 1fr; }
+            h1 { font-size: 1.8rem; }
+        }
+
+        .channel-btn {
+            background: #334155;
+            color: #f8fafc;
+            border: 2px solid transparent;
+            padding: 15px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .channel-btn:hover {
+            background: #475569;
+            border-color: #38bdf8;
+        }
+
+        .channel-btn.active {
+            background: #0284c7;
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+        }
+
+        .notice {
+            margin-top: 25px;
+            font-size: 13px;
+            color: #94a3b8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-container">
+        <div class="logo-box">
+            <span class="logo-text-top">PRINCE</span>
+            <span class="logo-text-mid">SAJJAD</span>
+            <span class="logo-icon">🏆</span>
+            <span class="logo-text-top" style="color:#38bdf8; font-size:10px;">SPORTS</span>
+        </div>
+        <h1>Prince Sajjad Sports</h1>
+        <p class="subtitle">Dual Broadcast Core HLS Player Network</p>
+    </div>
+
+    <div class="container">
+        <div class="player-wrapper">
+            <video id="hls-core-player" controls autoplay muted playsinline webkit-playsinline></video>
+        </div>
+
+        <div class="channel-list">
+            <button class="channel-btn" onclick="loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8', this)">BEIN TV</button>
+            <button class="channel-btn" onclick="loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/32/index.m3u8', this)">WIN SPORTS</button>
+        </div>
+    </div>
+
+    <p class="notice">🔊 <b>Sync Note:</b> Streaming pipeline updated. Just tap the video volume icon to unmute with flawless audio tracking.</p>
+
+    <script>
+        var videoElement = document.getElementById('hls-core-player');
+        var hlsEngineInstance = null;
+
+        function loadHlsStream(streamUrl, buttonElement) {
+            videoElement.pause();
+            videoElement.src = "";
+            videoElement.load();
+
+            if (hlsEngineInstance) {
+                hlsEngineInstance.destroy();
+                hlsEngineInstance = null;
+            }
+
+            if (Hls.isSupported()) {
+                hlsEngineInstance = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 15,
+                    maxBufferLength: 6,
+                    liveSyncDurationCount: 2,
+                    manifestLoadingMaxRetry: 4
+                });
+
+                hlsEngineInstance.loadSource(streamUrl);
+                hlsEngineInstance.attachMedia(videoElement);
+                
+                hlsEngineInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                    videoElement.play().catch(function(e) {
+                        console.log("Autoplay dynamic lock handled.");
+                    });
+                });
+
+                hlsEngineInstance.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                hlsEngineInstance.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                hlsEngineInstance.recoverMediaError();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+
+            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                videoElement.src = streamUrl;
+                video
             margin-bottom: 15px;
             display: flex;
             flex-direction: column;
