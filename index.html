@@ -147,7 +147,7 @@
 
         .channel-list {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 🟢 ৩টি বাটনের জন্য গ্রিড ৩ কলাম করা হলো */
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
 
@@ -228,7 +228,6 @@
 
         <div class="channel-section-title">Quick Presets / Channels</div>
         <div class="channel-list">
-            <button class="channel-btn" onclick="loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/106/index.m3u8', this)">D SPORTS</button>
             <button class="channel-btn" onclick="loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8', this)">BEIN TV</button>
             <button class="channel-btn" onclick="loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/32/index.m3u8', this)">WIN SPORTS</button>
         </div>
@@ -248,11 +247,12 @@
                 settings: ['quality', 'speed']
             });
 
-            // 🟢 ফিক্স: প্রথমবার পেজ লোড হলে নতুন এক নম্বর বাটন (D SPORTS) অটো-প্লে হবে
+            // 🟢 ফিক্স: প্রথমবার পেজ লোড হলে ব্রাউজার পলিসির কারণে মিউট রেখে অটোপ্লে করতে হবে
             var primaryChannelButton = document.getElementsByClassName('channel-btn')[0];
-            loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/106/index.m3u8', primaryChannelButton, true);
+            loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8', primaryChannelButton, true);
         });
 
+        // 🟢 ফিক্স: isInitialLoad প্যারামিটার যোগ করা হয়েছে সাউন্ড কন্ট্রোল করার জন্য
         function loadHlsStream(streamUrl, buttonElement, isInitialLoad = false) {
             if (hlsEngineInstance) {
                 hlsEngineInstance.destroy();
@@ -285,11 +285,14 @@
                 hlsEngineInstance.on(Hls.Events.MANIFEST_PARSED, function() {
                     if(plyrPlayer) {
                         if (isInitialLoad) {
+                            // প্রথমবার লোডের সময় মিউট করে প্লে করবে (ব্রাউজার ব্লক এড়াতে)
                             videoElement.muted = true;
                             plyrPlayer.play();
                         } else {
+                            // ইউজার বাটনে ক্লিক করলে সম্পূর্ণ সাউন্ড সহ প্লে হবে
                             videoElement.muted = false;
                             plyrPlayer.play().catch(function() {
+                                // ব্যাকআপ ক্যাচ যদি কোনো ব্রাউজার তাও ব্লক করে
                                 videoElement.muted = true;
                                 plyrPlayer.play();
                             });
@@ -338,6 +341,7 @@
 
         function playCustomLink() {
             var inputUrl = document.getElementById('custom-url-input').value.trim();
+            // ইউজার ইনপুট দিয়ে প্লে করলে আনমিউট থাকবে
             loadHlsStream(inputUrl, null, false);
         }
     </script>
