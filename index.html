@@ -218,7 +218,7 @@
 
     <div class="container">
         <div class="player-wrapper">
-            <video id="hls-core-player" controls autoplay muted playsinline></video>
+            <video id="hls-core-player" controls autoplay playsinline></video>
         </div>
 
         <div class="link-paster-box">
@@ -247,11 +247,13 @@
                 settings: ['quality', 'speed']
             });
 
+            // 🟢 ফিক্স: প্রথমবার পেজ লোড হলে ব্রাউজার পলিসির কারণে মিউট রেখে অটোপ্লে করতে হবে
             var primaryChannelButton = document.getElementsByClassName('channel-btn')[0];
-            loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8', primaryChannelButton);
+            loadHlsStream('https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8', primaryChannelButton, true);
         });
 
-        function loadHlsStream(streamUrl, buttonElement) {
+        // 🟢 ফিক্স: isInitialLoad প্যারামিটার যোগ করা হয়েছে সাউন্ড কন্ট্রোল করার জন্য
+        function loadHlsStream(streamUrl, buttonElement, isInitialLoad = false) {
             if (hlsEngineInstance) {
                 hlsEngineInstance.destroy();
                 hlsEngineInstance = null;
@@ -263,19 +265,18 @@
             }
 
             if (Hls.isSupported()) {
-                // 🛠️ SMART AUTO-HEALING ADJUSTED CONFIGURATION
                 hlsEngineInstance = new Hls({
                     enableWorker: true,
                     lowLatencyMode: true,
-                    backBufferLength: 10,          // পেছনের বাফার কিছুটা ক্লিয়ার রাখবে
-                    maxBufferLength: 8,            // 🟢 ফিক্স: বাফার সাইজ ৪ থেকে বাড়িয়ে ৮ করা হলো, যাতে ছবি না ফাটে
+                    backBufferLength: 10,          
+                    maxBufferLength: 8,            
                     maxMaxBufferLength: 12,        
-                    liveSyncDurationCount: 3,      // সার্ভারের ৩টি সেগমেন্ট ব্যাকগ্রাউন্ডে জমা রাখবে স্ট্যাবিলিটির জন্য
+                    liveSyncDurationCount: 3,      
                     manifestLoadingMaxRetry: 15,   
                     manifestLoadingRetryDelay: 1000,
                     levelLoadingMaxRetry: 15,
                     levelLoadingRetryDelay: 1000,
-                    abrEwmaDefaultEstimate: 5000000 // আপনার ফুল স্পিড নেটকে প্লেয়ার যেন শুরুতেই ডিটেক্ট করতে পারে
+                    abrEwmaDefaultEstimate: 5000000 
                 });
 
                 hlsEngineInstance.loadSource(streamUrl.trim());
@@ -283,14 +284,22 @@
                 
                 hlsEngineInstance.on(Hls.Events.MANIFEST_PARSED, function() {
                     if(plyrPlayer) {
-                        plyrPlayer.play().catch(function() {
+                        if (isInitialLoad) {
+                            // প্রথমবার লোডের সময় মিউট করে প্লে করবে (ব্রাউজার ব্লক এড়াতে)
                             videoElement.muted = true;
                             plyrPlayer.play();
-                        });
+                        } else {
+                            // ইউজার বাটনে ক্লিক করলে সম্পূর্ণ সাউন্ড সহ প্লে হবে
+                            videoElement.muted = false;
+                            plyrPlayer.play().catch(function() {
+                                // ব্যাকআপ ক্যাচ যদি কোনো ব্রাউজার তাও ব্লক করে
+                                videoElement.muted = true;
+                                plyrPlayer.play();
+                            });
+                        }
                     }
                 });
 
-                // 🔄 অটো-রিসেট লজিক: ফ্রেম ড্রপ বা ল্যাগ করলে প্লেয়ার নিজে থেকেই স্ট্রিম রিফ্রেশ করে সচল করবে
                 hlsEngineInstance.on(Hls.Events.ERROR, function(event, data) {
                     if (data.fatal) {
                         switch (data.type) {
@@ -312,7 +321,14 @@
             else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
                 videoElement.src = streamUrl.trim();
                 videoElement.addEventListener('loadedmetadata', function() {
-                    if(plyrPlayer) plyrPlayer.play();
+                    if(plyrPlayer) {
+                        if (isInitialLoad) {
+                            videoElement.muted = true;
+                        } else {
+                            videoElement.muted = false;
+                        }
+                        plyrPlayer.play();
+                    }
                 });
             }
 
@@ -325,7 +341,8 @@
 
         function playCustomLink() {
             var inputUrl = document.getElementById('custom-url-input').value.trim();
-            loadHlsStream(inputUrl, null);
+            // ইউজার ইনপুট দিয়ে প্লে করলে আনমিউট থাকবে
+            loadHlsStream(inputUrl, null, false);
         }
     </script>
 </body>
